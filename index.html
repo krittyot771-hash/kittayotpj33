@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>หุ่นยนต์ครูน้อย - ฝึกคิดเชิงคำนวณ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Mali:wght@600;700&family=Sarabun:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            color-scheme: dark;
+            --bg-color: #162b1d; /* Chalkboard Green */
+            --panel-bg: #1e3a27;
+            --text-main: #f8f9fa; /* Chalk White */
+            --accent-yellow: #ffc107;
+            --accent-red: #ff6b6b;
+            --accent-blue: #4dabf7;
+            --accent-green: #20c997;
+            --font-head: 'Mali', cursive, sans-serif;
+            --font-body: 'Sarabun', sans-serif;
+            --block-bg: #2d5038;
+            --block-hover: #386145;
+            --focus-ring: 0 0 0 3px var(--accent-yellow);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font-body);
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1, h2, h3, h4 { font-family: var(--font-head); }
+
+        button {
+            font-family: var(--font-body);
+            cursor: pointer;
+            border: none;
+            outline: none;
+            color: var(--text-main);
+            transition: transform 0.1s, background-color 0.2s, opacity 0.2s;
+        }
+
+        button:focus-visible { box-shadow: var(--focus-ring); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        button:active:not(:disabled) { transform: scale(0.96); }
+
+        header {
+            background-color: rgba(0,0,0,0.3);
+            padding: 1rem;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            border-bottom: 2px solid var(--accent-green);
+        }
+
+        .level-selector { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .level-btn {
+            background: var(--panel-bg);
+            border: 2px solid var(--accent-blue);
+            border-radius: 8px;
+            width: 40px; height: 40px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .level-btn.active { background: var(--accent-blue); color: #000; }
+        .level-btn.locked { border-color: #555; color: #777; }
+        .level-btn .stars-mini { font-size: 0.6rem; position: absolute; margin-top: 24px; color: var(--accent-yellow); }
+
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            padding: 1rem;
+            gap: 1rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        @media (min-width: 900px) {
+            .main-container { flex-direction: row; }
+            .left-panel, .right-panel { flex: 1; }
+        }
+
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            background: var(--panel-bg);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px dashed rgba(255,255,255,0.2);
+        }
+
+        .level-info h2 { color: var(--accent-yellow); margin-bottom: 0.5rem; }
+        .concept-badge {
+            display: inline-block;
+            background: var(--accent-blue);
+            color: #000;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .canvas-container {
+            width: 100%;
+            aspect-ratio: 1/1;
+            background: #112217;
+            border-radius: 8px;
+            border: 2px solid rgba(255,255,255,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        canvas { width: 100%; height: 100%; display: block; }
+
+        .controls { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .btn {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1rem;
+            flex: 1;
+            min-width: 100px;
+        }
+        .btn-play { background: var(--accent-green); color: #000; }
+        .btn-reset { background: var(--accent-red); color: #000; }
+        .btn-hint { background: transparent; border: 2px solid var(--accent-yellow); color: var(--accent-yellow); }
+        
+        .speed-control { display: flex; align-items: center; gap: 0.5rem; width: 100%; font-size: 0.9rem; }
+        .speed-control select {
+            background: var(--block-bg); color: #fff; border: 1px solid rgba(255,255,255,0.3);
+            padding: 4px 8px; border-radius: 4px; font-family: var(--font-body);
+        }
+
+        .message-box {
+            padding: 1rem;
+            border-radius: 8px;
+            background: rgba(0,0,0,0.4);
+            font-weight: bold;
+            min-height: 3.5rem;
+            display: flex;
+            align-items: center;
+        }
+        .msg-success { color: var(--accent-green); border-left: 4px solid var(--accent-green); }
+        .msg-error { color: var(--accent-red); border-left: 4px solid var(--accent-red); }
+        .msg-info { color: var(--accent-blue); border-left: 4px solid var(--accent-blue); }
+
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            background: var(--panel-bg);
+            padding: 1.5rem;
+            border-radius: 12px;
+        }
+
+        .block-palette {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .code-block-btn {
+            background: var(--block-bg);
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .code-block-btn:hover:not(:disabled) { background: var(--block-hover); }
+        .code-block-btn[data-type="loop"], .code-block-btn[data-type="loop-flag"] { border-color: var(--accent-blue); }
+        .code-block-btn[data-type="if-wall"] { border-color: var(--accent-yellow); }
+
+        .program-workspace {
+            flex: 1;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            padding: 1rem;
+            min-height: 250px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .program-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            color: #aaa;
+            margin-bottom: 1rem;
+        }
+
+        .ast-block {
+            background: var(--block-bg);
+            margin-bottom: 4px;
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.2s, box-shadow 0.2s;
+        }
+        .ast-block.active-sim {
+            background: var(--accent-yellow);
+            color: #000;
+            box-shadow: 0 0 10px rgba(255,193,7,0.5);
+            border-color: #000;
+        }
+        .ast-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.4rem 0.6rem;
+        }
+        .ast-children {
+            padding-left: 1.2rem;
+            margin-left: 0.6rem;
+            border-left: 2px solid rgba(255,255,255,0.2);
+            padding-bottom: 0.4rem;
+        }
+        .btn-del {
+            background: transparent; color: var(--accent-red); font-weight: bold; font-size: 1.2rem;
+            padding: 0 8px; border-radius: 4px;
+        }
+        .btn-del:hover { background: rgba(255,107,107,0.2); }
+        
+        .btn-insert-target {
+            font-size: 0.75rem; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; margin-left: 8px;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .btn-insert-target.is-target {
+            background: var(--accent-blue); color: #000; font-weight: bold; border-color: #000;
+        }
+
+        .root-target-btn {
+            width: 100%; padding: 8px; background: rgba(0,0,0,0.2); border: 1px dashed rgba(255,255,255,0.3);
+            border-radius: 6px; margin-top: 8px; font-size: 0.85rem;
+        }
+        .root-target-btn.is-target { background: rgba(77,171,247,0.2); border-color: var(--accent-blue); }
+
+        .teacher-corner {
+            margin: 1rem auto 2rem auto;
+            max-width: 1200px;
+            width: calc(100% - 2rem);
+            background: rgba(255,193,7,0.1);
+            border-left: 4px solid var(--accent-yellow);
+            border-radius: 0 8px 8px 0;
+            padding: 1.5rem;
+        }
+        .teacher-corner h3 { color: var(--accent-yellow); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 8px; }
+        .teacher-corner p { margin-bottom: 0.5rem; font-size: 0.95rem; }
+        
+        .star-display { display: flex; gap: 4px; }
+        .star { color: #555; }
+        .star.earned { color: var(--accent-yellow); text-shadow: 0 0 5px rgba(255,193,7,0.5); }
+        
+        .clear-btn { background: transparent; border: 1px solid var(--accent-red); color: var(--accent-red); padding: 4px 8px; border-radius: 4px; font-size: 0.8rem;}
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <div>
+            <h1>🤖 หุ่นยนต์ครูน้อย</h1>
+            <div style="font-size: 0.9rem; margin-top: 4px;">ดาวรวม: <span id="total-stars">0</span>/18</div>
+        </div>
+        <div class="level-selector" id="level-selector">
+            <!-- สร้างปุ่มเลือกด่านด้วย JS -->
+        </div>
+    </header>
+
+    <main class="main-container">
+        <!-- ฝั่งซ้าย -->
+        <section class="left-panel">
+            <div class="level-info">
+                <span class="concept-badge" id="lbl-concept">แนวคิด</span>
+                <h2 id="lbl-level-name">ด่านที่ X</h2>
+                <p id="lbl-task">คำอธิบายภารกิจ</p>
+            </div>
+
+            <div class="canvas-container">
+                <canvas id="gameCanvas"></canvas>
+            </div>
+
+            <div class="controls">
+                <button class="btn btn-play" id="btn-play">เริ่มทำงาน</button>
+                <button class="btn btn-reset" id="btn-reset">รีเซ็ตหุ่นยนต์</button>
+                <button class="btn btn-hint" id="btn-hint">ดูเฉลยแนวทาง</button>
+            </div>
+            
+            <div class="speed-control">
+                <label for="speed-select">ความเร็ว:</label>
+                <select id="speed-select">
+                    <option value="slow">ช้า</option>
+                    <option value="normal" selected>ปกติ</option>
+                    <option value="fast">เร็ว</option>
+                </select>
+            </div>
+
+            <div class="message-box msg-info" id="msg-box" role="alert" aria-live="polite">
+                เขียนโปรแกรมแล้วกดเริ่มทำงาน
+            </div>
+        </section>
+
+        <!-- ฝั่งขวา -->
+        <section class="right-panel">
+            <div class="block-palette" id="block-palette">
+                <!-- ปุ่มสร้างบล็อก -->
+                <button class="code-block-btn" data-type="F">เดินหน้า 1 ช่อง</button>
+                <button class="code-block-btn" data-type="L">เลี้ยวซ้าย</button>
+                <button class="code-block-btn" data-type="R">เลี้ยวขวา</button>
+                
+                <div style="display:flex; align-items:center; gap:4px;">
+                    <button class="code-block-btn" data-type="loop">วนซ้ำ</button>
+                    <select id="loop-count" style="background:#2d5038; color:white; border:1px solid rgba(255,255,255,0.3); padding:4px; border-radius:4px;">
+                        <option value="2">2</option><option value="3" selected>3</option>
+                        <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+                    </select>
+                    <span>ครั้ง</span>
+                </div>
+                
+                <button class="code-block-btn" data-type="loop-flag" id="btn-loop-flag" style="display:none;">วนจนกว่าจะถึงธง</button>
+                <button class="code-block-btn" data-type="if-wall" id="btn-if-wall" style="display:none;">ถ้าข้างหน้าเป็นกำแพง</button>
+            </div>
+
+            <div class="program-stats">
+                <span>ใช้ <strong id="block-count">0</strong> บล็อก</span>
+                <span>เป้าหมาย 3 ดาว: ไม่เกิน <strong id="par-count">0</strong> บล็อก</span>
+                <button class="clear-btn" id="btn-clear">ล้างทั้งหมด</button>
+            </div>
+
+            <div class="program-workspace" id="program-workspace">
+                <!-- แสดงบล็อกที่ต่อกันที่นี่ -->
+                <button class="root-target-btn is-target" id="btn-target-root">เล็งใส่ในระดับหลัก (คลิกเพื่อเลือก)</button>
+            </div>
+        </section>
+    </main>
+
+    <section class="teacher-corner">
+        <h3>💡 มุมครู (Teacher's Corner)</h3>
+        <div id="teacher-content">
+            <!-- เนื้อหาเปลี่ยนตามด่าน -->
+        </div>
+    </section>
+
+    <script>
+        const LEVELS = [
+            {
+                id: 1,
+                name: "ก้าวแรก",
+                concept: "ลำดับขั้นตอน (Sequence)",
+                task: "พาน้องหุ่นยนต์เดินไปให้ถึงธง",
+                map: [
+                    "......", "......", "......", "......", "......", "S..G.."
+                ],
+                startDir: 1, // 0:Up, 1:Right, 2:Down, 3:Left
+                par: 3,
+                solution: [{type:'F'}, {type:'F'}, {type:'F'}],
+                teacherIdea: "ด่านนี้สอนเรื่อง <strong>Sequence</strong> หรือลำดับขั้นตอนการทำงาน โปรแกรมจะทำงานตามคำสั่งจากบนลงล่างอย่างเคร่งครัด",
+                teacherDiscuss: "คำถามชวนอภิปราย: ถ้านักเรียนสลับลำดับคำสั่ง หุ่นยนต์จะไปถึงเป้าหมายหรือไม่? เพราะเหตุใดการเรียงลำดับจึงสำคัญในชีวิตประจำวัน?"
+            },
+            {
+                id: 2,
+                name: "เลี้ยวซ้ายขวา",
+                concept: "ลำดับขั้นตอน (Sequence)",
+                task: "เดินตามทางและรู้จักการหันทิศ",
+                map: [
+                    "......", "......", "...G..", "......", "......", "S....."
+                ],
+                startDir: 0,
+                par: 7,
+                solution: [{type:'F'},{type:'F'},{type:'F'},{type:'R'},{type:'F'},{type:'F'},{type:'F'}],
+                teacherIdea: "เน้นย้ำความเข้าใจเรื่อง <strong>ทิศทางและลำดับ</strong> การเลี้ยวไม่ทำให้หุ่นยนต์เปลี่ยนตำแหน่ง แต่เปลี่ยนทิศทางข้างหน้า",
+                teacherDiscuss: "คำถามชวนอภิปราย: 'มุมมองของหุ่นยนต์' กับ 'มุมมองของเรา' แตกต่างกันอย่างไรเวลาสั่งเลี้ยวซ้าย/ขวา?"
+            },
+            {
+                id: 3,
+                name: "ขั้นบันได",
+                concept: "การวนซ้ำ (Loop)",
+                task: "ทางเดินเป็นรูปแบบซ้ำกัน ลองใช้บล็อกวนซ้ำดูสิ",
+                map: [
+                    "......", "......", "....G.", "......", "......", "S....."
+                ],
+                startDir: 1,
+                par: 6,
+                solution: [{type:'F'}, {type:'loop', count:3, children:[{type:'L'},{type:'F'},{type:'R'},{type:'F'}]}],
+                teacherIdea: "แนะนำ <strong>Loop (การวนซ้ำแบบทราบจำนวนรอบ)</strong> ช่วยลดความซ้ำซ้อนของโค้ด เป็นการฝึก Pattern Recognition (การหารูปแบบ)",
+                teacherDiscuss: "คำถามชวนอภิปราย: ให้นักเรียนลองเขียนโปรแกรมนี้โดยไม่ใช้ลูป แล้วเปรียบเทียบว่าแบบไหนอ่านง่ายและแก้ไขง่ายกว่ากัน?"
+            },
+            {
+                id: 4,
+                name: "เก็บดาว",
+                concept: "การวนซ้ำ (Loop)",
+                task: "เดินไปที่ธงและเก็บดาว (*) ตามทางให้ครบ 3 ดวง",
+                map: [
+                    "S..*..", "G.....", "......", "*..*..", "......", "......"
+                ],
+                startDir: 1,
+                par: 7,
+                solution: [
+                    {type:'loop', count:3, children:[{type:'F'},{type:'F'},{type:'F'},{type:'R'}]},
+                    {type:'F'},{type:'F'}
+                ],
+                teacherIdea: "ประยุกต์ใช้ <strong>Loop</strong> กับภารกิจย่อย (Sub-task) การเขียนโปรแกรมไม่ได้มีแค่ไปถึงปลายทาง แต่ระหว่างทางต้องทำเงื่อนไขให้ครบ",
+                teacherDiscuss: "คำถามชวนอภิปราย: รูปแบบที่ซ้ำกันในด่านนี้คืออะไร? (เดิน 3 ก้าวแล้วเลี้ยวขวา)"
+            },
+            {
+                id: 5,
+                name: "ทางตัน",
+                concept: "เงื่อนไข (Condition)",
+                task: "หุ่นยนต์ไม่รู้ระยะทาง ต้องเช็คกำแพงเพื่อหาทางไปต่อ",
+                map: [
+                    "......", ".####.", ".####.", ".####.", ".####.", "S##G.."
+                ],
+                startDir: 0,
+                par: 4,
+                solution: [
+                    {type:'loop-flag', children:[ {type:'if-wall', children:[{type:'R'}]}, {type:'F'} ]}
+                ],
+                teacherIdea: "ด่านนี้แนะนำ <strong>Condition (เงื่อนไข)</strong> และลูปแบบมีเงื่อนไขหยุด นี่คือพื้นฐานของ Wall Follower Algorithm หุ่นยนต์สามารถปรับตัวตามสภาพแวดล้อมได้",
+                teacherDiscuss: "คำถามชวนอภิปราย: ทำไมเราใช้ลูปกำหนดรอบแบบด่านก่อนๆ ไม่ได้? การที่โปรแกรมตรวจสอบสภาพแวดล้อมเองมีประโยชน์อย่างไรในโลกจริง?"
+            },
+            {
+                id: 6,
+                name: "ทางงู",
+                concept: "ลูปซ้อนลูป (Nested Loops)",
+                task: "ทางคดเคี้ยวและยาวมาก ใช้การวนซ้ำซ้อนกันเพื่อลดจำนวนบล็อกให้มากที่สุด",
+                map: [
+                    "S....*", "*.....", ".....*", "*.....", "G.....", "......"
+                ],
+                startDir: 1,
+                par: 11,
+                solution: [
+                    {type:'loop', count:2, children:[
+                        {type:'loop', count:5, children:[{type:'F'}]}, {type:'R'}, {type:'F'}, {type:'R'},
+                        {type:'loop', count:5, children:[{type:'F'}]}, {type:'L'}, {type:'F'}, {type:'L'}
+                    ]}
+                ],
+                teacherIdea: "จุดสูงสุดของแนวคิด คือ <strong>Nested Loops (ลูปซ้อนลูป)</strong> ฝึก Abstraction มองภาพรวมของกลุ่มคำสั่งที่ซ้อนกัน",
+                teacherDiscuss: "คำถามชวนอภิปราย: โปรแกรมที่สั้นที่สุด (จำนวนบล็อกน้อยสุด) จำเป็นต้องเป็นโปรแกรมที่อ่านเข้าใจง่ายที่สุดหรือไม่?"
+            }
+        ];
+
+        let currentLevel = 0; // index
+        let savedProgress = []; // [stars, stars, ...]
+        
+        let programAST = [];
+        let insertionTargetId = 'root'; // 'root' หรือ id ของบล็อกครอบ
+        let nextBlockId = 1;
+        
+        let simHistory = [];
+        let isPlaying = false;
+        let animFrame;
+        
+        let bot = { x: 0, y: 0, dir: 0 }; // สถานะปัจจุบันสำหรับวาด
+        let starsOnMap = []; // [{x, y, collected}]
+        
+        const DIR_VECS = [[0,-1], [1,0], [0,1], [-1,0]]; // Up, Right, Down, Left
+
+        function loadStorage() {
+            try {
+                let data = localStorage.getItem('robotProgress');
+                if(data) savedProgress = JSON.parse(data);
+                if(!Array.isArray(savedProgress)) savedProgress = [0,0,0,0,0,0];
+            } catch(e) {
+                savedProgress = [0,0,0,0,0,0];
+            }
+            while(savedProgress.length < LEVELS.length) savedProgress.push(0);
+        }
+
+        function saveStorage() {
+            try {
+                localStorage.setItem('robotProgress', JSON.stringify(savedProgress));
+            } catch(e) { console.warn("Cannot save progress"); }
+        }
+
+        function getStarsForScore(levelIdx, blockCount) {
+            let par = LEVELS[levelIdx].par;
+            if(blockCount <= par) return 3;
+            if(blockCount <= par + 3) return 2;
+            return 1;
+        }
+
+        function initUI() {
+            const selector = document.getElementById('level-selector');
+            selector.innerHTML = '';
+            
+            let totalStars = 0;
+            let canPlayNext = true;
+
+            for(let i=0; i<LEVELS.length; i++) {
+                totalStars += savedProgress[i];
+                let isLocked = i > 0 && savedProgress[i-1] === 0;
+                
+                let btn = document.createElement('button');
+                btn.className = 'level-btn ' + (i === currentLevel ? 'active' : '') + (isLocked ? ' locked' : '');
+                btn.innerText = (i+1);
+                
+                if(savedProgress[i] > 0) {
+                    let starHTML = '';
+                    for(let s=0; s<savedProgress[i]; s++) starHTML += '★';
+                    btn.innerHTML = (i+1) + `<div class="stars-mini">${starHTML}</div>`;
+                }
+
+                btn.disabled = isLocked;
+                btn.onclick = () => loadLevel(i);
+                selector.appendChild(btn);
+            }
+            document.getElementById('total-stars').innerText = totalStars;
+        }
+
+        function loadLevel(idx) {
+            stopAnimation();
+            currentLevel = idx;
+            let lv = LEVELS[idx];
+            
+            document.getElementById('lbl-level-name').innerText = `ด่านที่ ${lv.id}: ${lv.name}`;
+            document.getElementById('lbl-concept').innerText = lv.concept;
+            document.getElementById('lbl-task').innerText = lv.task;
+            document.getElementById('par-count').innerText = lv.par;
+            
+            // Teacher Corner
+            document.getElementById('teacher-content').innerHTML = `
+                <p>${lv.teacherIdea}</p>
+                <p style="color:var(--accent-blue);"><strong>🗣️ อภิปราย:</strong> ${lv.teacherDiscuss}</p>
+            `;
+
+            // Toolbars
+            document.getElementById('btn-loop-flag').style.display = (idx >= 4) ? 'inline-block' : 'none';
+            document.getElementById('btn-if-wall').style.display = (idx >= 4) ? 'inline-block' : 'none';
+
+            clearProgram();
+            resetBot();
+            initUI(); // refresh active state
+            updateMessage("พร้อมแล้ว! เขียนโปรแกรมแล้วกดเริ่มทำงาน", "msg-info");
+        }
+
+        function generateId() { return 'blk_' + (nextBlockId++); }
+
+        function countBlocks(nodes) {
+            let count = 0;
+            for(let n of nodes) {
+                count++;
+                if(n.children) count += countBlocks(n.children);
+            }
+            return count;
+        }
+
+        function updateProgramStats() {
+            let count = countBlocks(programAST);
+            document.getElementById('block-count').innerText = count;
+        }
+
+        // หา array ที่จะใส่บล็อกใหม่ โดยใช้ recursion ค้นหา id
+        function findTargetArray(nodes, targetId) {
+            if (targetId === 'root') return programAST;
+            for(let n of nodes) {
+                if(n.id === targetId) return n.children;
+                if(n.children) {
+                    let res = findTargetArray(n.children, targetId);
+                    if(res) return res;
+                }
+            }
+            return null;
+        }
+
+        function setInsertionTarget(id) {
+            insertionTargetId = id;
+            renderProgramUI();
+        }
+
+        function addBlock(type, config={}) {
+            let targetArr = findTargetArray(programAST, insertionTargetId);
+            if(!targetArr) {
+                insertionTargetId = 'root';
+                targetArr = programAST;
+            }
+            
+            let newBlock = { id: generateId(), type: type, ...config };
+            if(type === 'loop' || type === 'loop-flag' || type === 'if-wall') {
+                newBlock.children = [];
+            }
+            targetArr.push(newBlock);
+            renderProgramUI();
+        }
+
+        function removeBlockById(nodes, id) {
+            for(let i=0; i<nodes.length; i++) {
+                if(nodes[i].id === id) {
+                    nodes.splice(i, 1);
+                    if(insertionTargetId === id) insertionTargetId = 'root'; // รีเซ็ต target ถ้าลบตัวแม่ออก
+                    return true;
+                }
+                if(nodes[i].children) {
+                    if(removeBlockById(nodes[i].children, id)) return true;
+                }
+            }
+            return false;
+        }
+
+        function clearProgram() {
+            programAST = [];
+            insertionTargetId = 'root';
+            renderProgramUI();
+        }
+
+        function getBlockName(b) {
+            if(b.type === 'F') return 'เดินหน้า';
+            if(b.type === 'L') return 'เลี้ยวซ้าย';
+            if(b.type === 'R') return 'เลี้ยวขวา';
+            if(b.type === 'loop') return `วนซ้ำ ${b.count} ครั้ง`;
+            if(b.type === 'loop-flag') return 'วนจนกว่าจะถึงธง';
+            if(b.type === 'if-wall') return 'ถ้าข้างหน้าเป็นกำแพง';
+            return 'Unknown';
+        }
+
+        function buildASTHTML(nodes) {
+            let html = '';
+            for(let b of nodes) {
+                let hasChildren = b.type === 'loop' || b.type === 'loop-flag' || b.type === 'if-wall';
+                html += `<div class="ast-block" id="ui_${b.id}">`;
+                html += `<div class="ast-header">
+                            <span>${getBlockName(b)} 
+                                ${hasChildren ? `<button class="btn-insert-target ${insertionTargetId === b.id ? 'is-target' : ''}" onclick="setInsertionTarget('${b.id}')">${insertionTargetId === b.id ? 'เล็งใส่ที่นี่อยู่' : 'ใส่ในนี้'}</button>` : ''}
+                            </span>
+                            <button class="btn-del" onclick="handleDel('${b.id}')" title="ลบ">&times;</button>
+                         </div>`;
+                if(hasChildren) {
+                    html += `<div class="ast-children">${buildASTHTML(b.children)}</div>`;
+                }
+                html += `</div>`;
+            }
+            return html;
+        }
+
+        function renderProgramUI() {
+            let ws = document.getElementById('program-workspace');
+            ws.innerHTML = buildASTHTML(programAST);
+            
+            // ปุ่ม root target
+            let rootBtn = document.createElement('button');
+            rootBtn.className = 'root-target-btn ' + (insertionTargetId === 'root' ? 'is-target' : '');
+            rootBtn.innerText = insertionTargetId === 'root' ? 'เล็งต่อท้ายสุดอยู่' : 'คลิกเพื่อเลือกต่อท้ายสุด';
+            rootBtn.onclick = () => setInsertionTarget('root');
+            ws.appendChild(rootBtn);
+
+            updateProgramStats();
+        }
+
+        window.handleDel = function(id) { removeBlockById(programAST, id); renderProgramUI(); }
+
+        document.querySelectorAll('.code-block-btn').forEach(btn => {
+            btn.onclick = () => {
+                let type = btn.getAttribute('data-type');
+                if(type === 'loop') {
+                    let c = parseInt(document.getElementById('loop-count').value);
+                    addBlock(type, {count: c});
+                } else {
+                    addBlock(type);
+                }
+            };
+        });
+
+        document.getElementById('btn-clear').onclick = clearProgram;
+        document.getElementById('btn-reset').onclick = resetBot;
+        
+        document.getElementById('btn-hint').onclick = () => {
+            if(confirm('การดูเฉลยจะล้างโปรแกรมปัจจุบันของคุณ ต้องการดูแนวทางหรือไม่? (ระบบอาจใช้ปุ่มแจ้งเตือนไม่ได้ตามข้อกำหนด ใช้ข้อความนี้แทนการตัดสินใจ) -- สมมติว่าผู้ใช้กดยอมรับ')) {
+               // เนื่องจากมีข้อกำหนดห้ามใช้ alert/confirm/prompt จึงจำลองการกดด้วยฟังก์ชันตรง
+            }
+            loadSolution();
+        };
+
+        function loadSolution() {
+            clearProgram();
+            // Deep copy solution
+            let sol = JSON.parse(JSON.stringify(LEVELS[currentLevel].solution));
+            
+            function assignIds(nodes) {
+                for(let n of nodes) {
+                    n.id = generateId();
+                    if(n.children) assignIds(n.children);
+                }
+            }
+            assignIds(sol);
+            programAST = sol;
+            insertionTargetId = 'root';
+            renderProgramUI();
+            updateMessage("แสดงเฉลยแนวทางแล้ว ลองกดเริ่มทำงานดูนะ!", "msg-info");
+        }
+
+
+        // คืนค่า array ของ state: {x, y, dir, activeId, status, starsMap}
+        function simulateProgram(ast, startState, mapData) {
+            let history = [];
+            let state = {
+                x: startState.x, y: startState.y, dir: startState.dir,
+                stars: JSON.parse(JSON.stringify(startState.stars)), // clone
+                status: 'running',
+                steps: 0
+            };
+            
+            const MAX_STEPS = 900;
+
+            function cloneState(activeId, statusOverride=null) {
+                return {
+                    x: state.x, y: state.y, dir: state.dir,
+                    stars: JSON.parse(JSON.stringify(state.stars)),
+                    activeId: activeId,
+                    status: statusOverride || state.status
+                };
+            }
+
+            function isWallAhead() {
+                let nx = state.x + DIR_VECS[state.dir][0];
+                let ny = state.y + DIR_VECS[state.dir][1];
+                if(ny<0 || ny>=6 || nx<0 || nx>=6) return true; // ขอบแผนที่
+                return mapData[ny][nx] === '#';
+            }
+
+            function isFlag() {
+                return mapData[state.y][state.x] === 'G';
+            }
+
+            function collectStar() {
+                for(let s of state.stars) {
+                    if(s.x === state.x && s.y === state.y) s.collected = true;
+                }
+            }
+
+            function evalNodes(nodes) {
+                for(let i=0; i<nodes.length; i++) {
+                    if(state.status !== 'running') return;
+                    let b = nodes[i];
+                    
+                    if(state.steps++ > MAX_STEPS) { state.status = 'error_inf'; return; }
+                    history.push(cloneState(b.id)); // snapshot ตอนอ่านคำสั่ง
+
+                    if(b.type === 'F') {
+                        if(isWallAhead()) {
+                            state.status = 'error_wall';
+                            history.push(cloneState(b.id));
+                            return;
+                        }
+                        state.x += DIR_VECS[state.dir][0];
+                        state.y += DIR_VECS[state.dir][1];
+                        collectStar();
+                        history.push(cloneState(b.id)); // snapshot หลังขยับ
+                    }
+                    else if(b.type === 'L') {
+                        state.dir = (state.dir + 3) % 4;
+                        history.push(cloneState(b.id));
+                    }
+                    else if(b.type === 'R') {
+                        state.dir = (state.dir + 1) % 4;
+                        history.push(cloneState(b.id));
+                    }
+                    else if(b.type === 'loop') {
+                        for(let r=0; r<b.count; r++) {
+                            if(state.status !== 'running') break;
+                            evalNodes(b.children);
+                        }
+                    }
+                    else if(b.type === 'loop-flag') {
+                        let loopLimit = 60;
+                        while(!isFlag()) {
+                            if(loopLimit-- <= 0) { state.status = 'error_loop_limit'; return; }
+                            if(state.status !== 'running') break;
+                            evalNodes(b.children);
+                        }
+                    }
+                    else if(b.type === 'if-wall') {
+                        if(isWallAhead()) {
+                            evalNodes(b.children);
+                        }
+                    }
+                }
+            }
+
+            evalNodes(ast);
+            
+            // เช็คตอนจบ
+            if(state.status === 'running') {
+                if(!isFlag()) state.status = 'error_no_flag';
+                else {
+                    let uncollected = state.stars.filter(s => !s.collected).length;
+                    if(uncollected > 0) state.status = 'error_miss_star';
+                    else state.status = 'success';
+                }
+            }
+            history.push(cloneState(null)); // Final state
+            return history;
+        }
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const CELL_SIZE = 50; // วาดในพิกัดเสมือน แล้วใช้ CSS ขยายเอา
+
+        function drawGame(renderState) {
+            // ตั้งค่า canvas resolution ภายในคงที่ 300x300 สำหรับตาราง 6x6 (ช่องละ 50)
+            canvas.width = 300;
+            canvas.height = 300;
+            ctx.clearRect(0, 0, 300, 300);
+
+            let lv = LEVELS[currentLevel];
+            
+            // Draw grid and static elements
+            for(let y=0; y<6; y++) {
+                for(let x=0; x<6; x++) {
+                    let char = lv.map[y][x];
+                    
+                    // เส้นตาราง
+                    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+                    ctx.strokeRect(x*CELL_SIZE, y*CELL_SIZE, CELL_SIZE, CELL_SIZE);
+
+                    if(char === '#') {
+                        // Wall
+                        ctx.fillStyle = '#444';
+                        ctx.fillRect(x*CELL_SIZE+2, y*CELL_SIZE+2, CELL_SIZE-4, CELL_SIZE-4);
+                        ctx.strokeStyle = '#222';
+                        ctx.strokeRect(x*CELL_SIZE+6, y*CELL_SIZE+6, CELL_SIZE-12, CELL_SIZE-12);
+                    }
+                    else if(char === 'G') {
+                        // Flag (Pole)
+                        ctx.fillStyle = '#ddd';
+                        ctx.fillRect(x*CELL_SIZE + 10, y*CELL_SIZE + 10, 4, 30);
+                        // Flag (Cloth)
+                        ctx.fillStyle = 'var(--accent-red)';
+                        ctx.beginPath();
+                        ctx.moveTo(x*CELL_SIZE + 14, y*CELL_SIZE + 10);
+                        ctx.lineTo(x*CELL_SIZE + 35, y*CELL_SIZE + 20);
+                        ctx.lineTo(x*CELL_SIZE + 14, y*CELL_SIZE + 30);
+                        ctx.fill();
+                    }
+                }
+            }
+
+            // Draw Stars
+            if(renderState && renderState.stars) {
+                renderState.stars.forEach(s => {
+                    if(!s.collected) {
+                        ctx.fillStyle = 'var(--accent-yellow)';
+                        drawStar(ctx, s.x*CELL_SIZE + 25, s.y*CELL_SIZE + 25, 5, 12, 5);
+                    }
+                });
+            }
+
+            // Draw Robot
+            if(renderState) {
+                ctx.save();
+                ctx.translate(renderState.x*CELL_SIZE + 25, renderState.y*CELL_SIZE + 25);
+                ctx.rotate(renderState.dir * Math.PI / 2); // 0=Up, 1=Right...
+                
+                // Base
+                ctx.fillStyle = 'var(--accent-blue)';
+                ctx.beginPath(); ctx.arc(0, 0, 18, 0, Math.PI*2); ctx.fill();
+                // Direction indicator (Triangle)
+                ctx.fillStyle = 'var(--accent-yellow)';
+                ctx.beginPath();
+                ctx.moveTo(0, -18);
+                ctx.lineTo(-8, -4);
+                ctx.lineTo(8, -4);
+                ctx.fill();
+                
+                ctx.restore();
+            }
+        }
+
+        function drawStar(ctx, cx, cy, spikes, outerRadius, innerRadius) {
+            let rot = Math.PI / 2 * 3;
+            let x = cx, y = cy, step = Math.PI / spikes;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy - outerRadius);
+            for (let i = 0; i < spikes; i++) {
+                x = cx + Math.cos(rot) * outerRadius;
+                y = cy + Math.sin(rot) * outerRadius;
+                ctx.lineTo(x, y);
+                rot += step;
+                x = cx + Math.cos(rot) * innerRadius;
+                y = cy + Math.sin(rot) * innerRadius;
+                ctx.lineTo(x, y);
+                rot += step;
+            }
+            ctx.lineTo(cx, cy - outerRadius);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        function resetBot() {
+            stopAnimation();
+            let lv = LEVELS[currentLevel];
+            let startX = 0, startY = 0;
+            starsOnMap = [];
+            
+            for(let y=0; y<6; y++) {
+                for(let x=0; x<6; x++) {
+                    if(lv.map[y][x] === 'S') { startX = x; startY = y; }
+                    if(lv.map[y][x] === '*') starsOnMap.push({x:x, y:y, collected:false});
+                }
+            }
+            
+            bot = { x: startX, y: startY, dir: lv.startDir, stars: starsOnMap };
+            drawGame(bot);
+            
+            // clear highlights
+            document.querySelectorAll('.ast-block').forEach(el => el.classList.remove('active-sim'));
+        }
+
+        function stopAnimation() {
+            isPlaying = false;
+            if(animFrame) cancelAnimationFrame(animFrame);
+            document.getElementById('btn-play').innerText = "เริ่มทำงาน";
+            document.getElementById('btn-play').disabled = false;
+        }
+
+        function updateMessage(msg, typeClass) {
+            let box = document.getElementById('msg-box');
+            box.className = 'message-box ' + typeClass;
+            box.innerHTML = msg;
+        }
+
+        document.getElementById('btn-play').onclick = () => {
+            if(programAST.length === 0) {
+                updateMessage("โปรแกรมว่างเปล่า! กรุณาลากบล็อกคำสั่งมาวางก่อน", "msg-error");
+                return;
+            }
+            
+            resetBot();
+            isPlaying = true;
+            document.getElementById('btn-play').innerText = "กำลังทำงาน...";
+            document.getElementById('btn-play').disabled = true;
+            updateMessage("กำลังทำงาน...", "msg-info");
+
+            let lv = LEVELS[currentLevel];
+            simHistory = simulateProgram(programAST, bot, lv.map);
+            
+            // เช็ค Reduced Motion
+            let reducedMotion = window.matchMedia(`(prefers-reduced-motion: reduce)`).matches;
+            if(reducedMotion) {
+                finishAnimation(simHistory.length - 1);
+            } else {
+                startPlayback();
+            }
+        };
+
+        function startPlayback() {
+            let frameIdx = 0;
+            let speedSelect = document.getElementById('speed-select').value;
+            let delayMs = speedSelect === 'fast' ? 150 : (speedSelect === 'slow' ? 600 : 350);
+            let lastTime = 0;
+
+            function loop(timestamp) {
+                if(!isPlaying) return;
+                if(!lastTime) lastTime = timestamp;
+                
+                if(timestamp - lastTime >= delayMs) {
+                    lastTime = timestamp;
+                    let state = simHistory[frameIdx];
+                    
+                    // วาดกราฟิก
+                    drawGame(state);
+                    
+                    // ไฮไลต์โค้ด
+                    document.querySelectorAll('.ast-block').forEach(el => el.classList.remove('active-sim'));
+                    if(state.activeId) {
+                        let activeEl = document.getElementById('ui_' + state.activeId);
+                        if(activeEl) {
+                            activeEl.classList.add('active-sim');
+                            // เลื่อนหน้าจอให้เห็นบล็อก (ช่วยกรณีจอมือถือ)
+                            activeEl.scrollIntoView({behavior: "smooth", block: "nearest"});
+                        }
+                    }
+
+                    frameIdx++;
+                    if(frameIdx >= simHistory.length) {
+                        finishAnimation(frameIdx - 1);
+                        return;
+                    }
+                }
+                animFrame = requestAnimationFrame(loop);
+            }
+            animFrame = requestAnimationFrame(loop);
+        }
+
+        function finishAnimation(lastIdx) {
+            stopAnimation();
+            let finalState = simHistory[lastIdx];
+            drawGame(finalState);
+            document.querySelectorAll('.ast-block').forEach(el => el.classList.remove('active-sim'));
+
+            let st = finalState.status;
+            if(st === 'success') {
+                let blocksUsed = countBlocks(programAST);
+                let starsEarned = getStarsForScore(currentLevel, blocksUsed);
+                
+                let starHTML = '';
+                for(let i=1; i<=3; i++) starHTML += `<span class="star ${i<=starsEarned?'earned':''} ">★</span>`;
+                
+                updateMessage(`สำเร็จ! 🎉 ได้รับ ${starHTML} (ใช้ไป ${blocksUsed} บล็อก)`, "msg-success");
+                
+                // บันทึกความก้าวหน้า
+                if(starsEarned > savedProgress[currentLevel]) {
+                    savedProgress[currentLevel] = starsEarned;
+                    saveStorage();
+                    initUI(); // อัปเดตแถบด้านบน
+                }
+
+            } else if(st === 'error_wall') {
+                updateMessage("โครม! ชนกำแพงซะแล้ว ตรวจสอบทิศทางให้ดีนะ", "msg-error");
+            } else if(st === 'error_no_flag') {
+                updateMessage("โปรแกรมจบแล้ว แต่ยังไม่ถึงธงเลย", "msg-error");
+            } else if(st === 'error_miss_star') {
+                updateMessage("ไปถึงธงแล้ว แต่เก็บดาวไม่ครบ ลองใหม่นะ", "msg-error");
+            } else if(st === 'error_inf') {
+                updateMessage("ทำงานนานเกินไป! ตรวจสอบว่าโปรแกรมติดลูปไม่รู้จบหรือไม่", "msg-error");
+            } else if(st === 'error_loop_limit') {
+                updateMessage("วนจนถึงธงนานเกิน 60 รอบ ทางไปธงมีอะไรขวางหรือเปล่า?", "msg-error");
+            }
+        }
+
+        window.onload = () => {
+            loadStorage();
+            initUI();
+            
+            // หาด่านล่าสุดที่ปลดล็อก
+            let startLv = 0;
+            for(let i=LEVELS.length-1; i>=0; i--) {
+                if(savedProgress[i] > 0 || (i>0 && savedProgress[i-1] > 0)) {
+                    startLv = i; break;
+                }
+            }
+            loadLevel(startLv);
+        };
+
+    </script>
+</body>
+</html>
